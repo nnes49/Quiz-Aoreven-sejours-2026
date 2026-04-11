@@ -459,4 +459,12 @@ function confetti(){
 function restart(){
   step=0; answers=[null,null,null];
   alive=Array(NB_SEJOURS).fill(true); pendingFi=null; busy=false;
-  document.getElementById('resul
+  document.getElementById('resultsScreen').style.display = 'none';
+  document.getElementById('quizScreen').style.display = 'block';
+window.scrollTo({top:0,behavior:'smooth'});
+  buildGrid(); 
+  renderQ();
+}
+</script>
+</body>
+</html>
