@@ -428,7 +428,7 @@ function showResults(){
       card.innerHTML = `
         <div class="res-card-head">
           <div class="rc-name">${s.nom}</div>
-         ${s.sourd ? '<div class="rc-sourd" title="Accessible sourds/malentendants"><img src="https://dealersdescience.com/wp-content/uploads/2013/01/logo-LSF.jpg" alt="Logo LSF" style="height: 24px; border-radius: 4px; margin-top: 4px;"></div>' : ''}
+${s.sourd ? '<div class="rc-sourd" style="display: flex; align-items: center; gap: 8px; margin-top: 8px;"><img src="https://dealersdescience.com/wp-content/uploads/2013/01/logo-LSF.jpg" alt="Logo LSF" style="height: 24px; border-radius: 4px;"><span style="color: #777777; font-family: \'Outfit\', sans-serif; font-size: 11px; text-transform: none; font-weight: 600;">Séjour ouvert aux personnes malentendantes et sourdes</span></div>' : ''}
         </div>
         <div class="res-card-body">
           <div class="rc-pills">${pills}</div>
