@@ -149,24 +149,25 @@ body { font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif; back
 </div>
 
 <div id="quizScreen">
-<div class="question-zone">
-    <div class="q-text" id="qText" style="margin-top: 4px;"></div>
+  <div class="question-zone" style="padding-bottom: 12px; border-bottom: none;">
+    <div class="q-text" id="qText"></div>
     <div class="opts-wrap" id="optsWrap"></div>
     <div class="nav-row">
       <button class="btn-back" id="btnBack" onclick="goBack()" disabled>← Retour</button>
       <button class="btn-elim" id="btnElim" onclick="confirmChoice()">Éliminer les séjours →</button>
     </div>
-    
-    <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed #cdddd0;">
-      <div class="q-meta" style="margin-bottom: 8px;">
-        <span class="q-label" id="qLabel">Question 1 / 3</span>
-        <span class="counter" id="counterText">27 séjours restants</span>
-      </div>
-      <div class="progress-dots" id="progressDots" style="margin-bottom: 0;"></div>
-    </div>
   </div>
-  <div class="grid-zone">
+
+  <div class="grid-zone" style="padding-top: 5px; padding-bottom: 10px;">
     <div class="cards-grid" id="cardsGrid"></div>
+  </div>
+
+  <div style="background: white; padding: 16px 20px; border-top: 2px dashed #ddeedd;">
+    <div class="q-meta" style="margin-bottom: 10px;">
+      <span class="q-label" id="qLabel">Question 1 / 3</span>
+      <span class="counter" id="counterText">27 séjours restants</span>
+    </div>
+    <div class="progress-dots" id="progressDots" style="margin-bottom: 0;"></div>
   </div>
 </div>
 
