@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz séjours — Aroéven Bordeaux Été 2026</title>
+
+<style>
+:root {
+  --bleu: #005680;
+  --vert: #9fc646;
+  --vert-intense: #00835C;
+  --orange: #F39200;
+  --ciel: #00AEB2;
+  --soleil: #FDC300;
+  --framboise: #E60060;
+  --bg: #f2f6f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif; background: var(--bg); min-height: 100vh; }
+
+.top-bar {
+  background: white; padding: 12px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 3px solid var(--vert);
+  position: sticky; top: 0; z-index: 50;
+}
+.top-bar img { height: 34px; width: auto; }
+.top-bar-title { font-family:'Trebuchet MS','Arial Rounded MT Bold',Arial,sans-serif;font-weight:800; font-size:13px; color:var(--bleu); text-align:right; line-height:1.3; }
+.top-bar-title span { display:block; font-size:11px; color:#aaa; font-family:'Segoe UI','Arial Rounded MT Bold',Arial,sans-serif; }
+
+.question-zone { background:white; padding:18px 20px 16px; border-bottom:1px solid #e4ede4; }
+.q-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.q-label { font-size:11px; font-weight:800; color:var(--vert-intense); text-transform:uppercase; letter-spacing:.8px; }
+.counter { font-size:13px; font-weight:800; color:var(--vert); }
+.progress-dots { display:flex; gap:6px; margin-bottom:12px; }
+.dot { height:5px; flex:1; border-radius:3px; background:#ddeedd; transition:background .3s; }
+.dot.done { background:var(--bleu); }
+.dot.active { background:var(--vert); }
+.q-text { font-family:'Trebuchet MS','Arial Rounded MT Bold',Arial,sans-serif;font-weight:800; font-size:clamp(16px,3vw,21px); color:var(--bleu); font-weight:700; margin-bottom:14px; line-height:1.3; }
+
+.opts-wrap { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.opt-chip {
+  padding:9px 16px; border:2px solid #cdddd0; border-radius:100px;
+  background:white; font-family:'Segoe UI','Arial Rounded MT Bold',Arial,sans-serif; font-size:13px; font-weight:700; color:#445;
+  cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px;
+}
+.opt-chip:hover { border-color:var(--vert); background:#f5fce8; color:var(--bleu); }
+.opt-chip.selected { border-color:var(--bleu); background:var(--bleu); color:white; }
+
+.nav-row { display:flex; align-items:center; gap:10px; }
+.btn-back { padding:9px 18px; border-radius:100px; border:2px solid #ccc; background:white; color:#999; font-family:'Segoe UI','Arial Rounded MT Bold',Arial,sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all .15s; }
+.btn-back:disabled { opacity:.3; pointer-events:none; }
+.btn-back:not(:disabled):hover { border-color:var(--bleu); color:var(--bleu); }
+.btn-elim { padding:10px 22px; border-radius:100px; border:none; background:var(--vert); color:var(--bleu); font-family:'Trebuchet MS','Arial Rounded MT Bold',Arial,sans-serif;font-weight:800; font-size:14px; font-weight:800; cursor:pointer; transition:all .15s; opacity:.35; pointer-events:none; }
+.btn-elim.ready { opacity:1; pointer-events:auto; box-shadow:0 4px 14px rgba(159,198,70,.35); }
+.btn-elim.ready:hover { background:#8ab535; transform:translateY(-1px); }
+
+.grid-zone { padding:18px 14px 40px; }
+.cards-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+@media(max-width:700px){ .cards-grid{ grid-template-columns:repeat(5,1fr); gap:6px; } }
+@media(max-width:420px){ .cards-grid{ grid-template-columns:repeat(4,1fr); gap:5px; } }
+
+.card-mystery {
+  aspect-ratio:2/3; border-radius:10px;
+  background:var(--bleu); border:2px solid var(--vert);
+  position:relative; overflow:hidden;
+}
+.card-mystery::before { content:''; position:absolute; inset:5px; border:1.5px solid rgba(159,198,70,.25); border-radius:6px; }
+.card-mystery::after { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(45deg); width:34%; height:34%; border:2px solid rgba(159,198,70,.3); }
+.card-mystery.eliminating { animation:boom .45s ease forwards; }
+@keyframes boom {
+  0%   { transform:scale(1); opacity:1; }
+  25%  { transform:scale(1.15); background:var(--framboise); filter:brightness(1.4); }
+  60%  { transform:scale(.5) rotate(12deg); opacity:.4; }
+  100% { transform:scale(0) rotate(22deg); opacity:0; }
+}
+.card-mystery.gone { visibility:hidden; pointer-events:none; }
+
+#revealScreen { display:none; text-align:center; padding:48px 20px; }
+.reveal-wrap { background:white; border-radius:20px; padding:36px 28px; max-width:460px; margin:0 auto; box-shadow:0 4px 24px rgba(0,86,128,.1); }
+.reveal-emoji { font-size:56px; margin-bottom:14px; }
+.reveal-title { font-family:'Trebuchet MS','Arial Rounded MT Bold',Arial,sans-serif;font-weight:800; font-size:clamp(20px,4vw,26px); color:var(--bleu); margin-bottom:8px; }
+.reveal-sub { font-size:14px; color:#888; margin-bottom:28px; line-height:1.6; }
+.btn-reveal { display:inline-flex; align-items:center; gap:10px; padding:16px 36px; background:var(--soleil); color:var(--bleu); border:none; border-radius:100px; font-family:'Trebuchet MS','Arial Rounded MT Bold',Arial,sans-serif;font-weight:800; font-size:18px; font-weight:800; cursor:pointer; box-shadow:0 6px 24px rgba(253,195,0,.4); transition:transform .15s; animation:pulse 2s ease-in-out infinite; }
+.btn-reveal:hover { transform:scale(1.04); }
+@keyframes pulse { 0%,100%{box-shadow:0 6px 24px rgba(253,195,0,.4)} 50%{box-shadow:0 10px 36px rgba(253,195,0,.65)} }
+
+#resultsScreen { display:none; padding:20px 14px 48px; }
+.res-header { text-align:center; margin-bottom:22px; }
+.res-header h2 { font-family:'Trebuchet MS','Arial Rounded MT Bold',Arial,sans-serif;font-weight:800; font-size:clamp(20px,4vw,28px); color:var(--bleu); margin-bottom:4px; }
+.res-header p { font-size:14px; color:#888; }
+.res-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; margin-bottom:26px; }
+
+.res-card { background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 18px rgba(0,86,128,.09); opacity:0; animation:flipIn .55s ease forwards; }
+@keyframes flipIn {
+  0%   { opacity:0; transform:perspective(600px) rotateY(80deg) scale(.85); }
+  65%  { transform:perspective(600px) rotateY(-5deg) scale(1.02); }
+  100% { opacity:1; transform:perspective(600px) rotateY(0) scale(1); }
+}
+.res-card.proximite .res-card-head { border-bottom:3px solid var(--vert); }
+.res-card.france    .res-card-head { border-bottom:3px solid var(--orange); }
+.res-card.etranger  .res-card-head { border-bottom:3px solid var(--ciel); }
+.res-card.proximite .rc-badge { background:var(--vert-intense); color:white; }
+.res-card.france    .rc-badge { background:var(--orange); color:white; }
+.res-card.etranger  .rc-badge { background:var(--ciel); color:white; }
+
+.res-card-head { padding:14px 16px 12px; }
+.rc-badge { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; padding:3px 10px; border-radius:100px; display:inline-block; margin-bottom:8px; }
+.rc-name { font-family:'Trebuchet MS','Arial Rounded MT Bold',Arial,sans-serif;font-weight:800; font-size:17px; font-weight:700; color:var(--bleu); line-height:1.2; }
+.rc-sourd { font-size:10px; color:var(--ciel); font-weight:700; margin-top:4px; }
+.res-card-body { padding:12px 16px 16px; }
+.rc-pills { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px; }
+.rc-pill { font-size:11px; padding:4px 9px; border-radius:100px; background:#f2f6f2; color:#555; font-weight:600; }
+.rc-pill.prix { background:#edfaf3; color:var(--vert-intense); font-weight:800; }
+.rc-pill.pass { background:#fff8e0; color:#996600; }
+
+.btn-more {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:9px 18px; border-radius:100px;
+  border:2px solid var(--bleu); background:white;
+  color:var(--bleu); font-family:'Segoe UI','Arial Rounded MT Bold',Arial,sans-serif;
+  font-size:12px; font-weight:800;
+  cursor:pointer; text-decoration:none;
+  transition:all .15s;
+}
+.btn-more:hover { background:var(--bleu); color:white; }
+.res-card.etranger .btn-more { border-color:var(--ciel); color:var(--ciel); }
+.res-card.etranger .btn-more:hover { background:var(--ciel); color:white; }
+
+.no-result { text-align:center; padding:40px 20px; background:white; border-radius:16px; grid-column:1/-1; }
+.no-result h3 { font-family:'Trebuchet MS','Arial Rounded MT Bold',Arial,sans-serif;font-weight:800; color:var(--bleu); font-size:20px; margin-bottom:8px; }
+.no-result p { color:#888; font-size:14px; line-height:1.6; }
+
+.btn-restart { display:block; width:100%; max-width:340px; margin:0 auto; padding:14px; border-radius:100px; border:2.5px solid var(--vert); background:white; color:var(--bleu); font-family:'Trebuchet MS','Arial Rounded MT Bold',Arial,sans-serif;font-weight:800; font-size:16px; font-weight:700; cursor:pointer; transition:all .15s; }
+.btn-restart:hover { background:#f4fce8; }
+.footer { text-align:center; margin-top:28px; padding-top:20px; border-top:1px solid #dde8dd; font-size:12px; color:#aaa; line-height:2.2; }
+.footer a { color:var(--bleu); text-decoration:none; font-weight:700; }
+
+.cf { position:fixed; pointer-events:none; z-index:9999; border-radius:2px; animation:cfFall linear forwards; }
+@keyframes cfFall { 0%{transform:translateY(-10px) rotate(0deg);opacity:1} 100%{transform:translateY(105vh) rotate(540deg);opacity:0} }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <svg width="120" height="40" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
+  <text x="2" y="28" font-family="Trebuchet MS, Arial, sans-serif" font-size="26" font-weight="900" fill="#005680">Aro</text>
+  <text x="44" y="28" font-family="Trebuchet MS, Arial, sans-serif" font-size="26" font-weight="900" fill="#9fc646">éven</text>
+</svg>
+  <div class="top-bar-title">Trouve ton séjour idéal <span>Été 2026</span></div>
+</div>
+
+<div id="quizScreen">
+  <div class="question-zone">
+    <div class="q-meta">
+      <span class="q-label" id="qLabel">Question 1 / 3</span>
+      <span class="counter" id="counterText">27 séjours restants</span>
+    </div>
+    <div class="progress-dots" id="progressDots"></div>
+    <div class="q-text" id="qText"></div>
+    <div class="opts-wrap" id="optsWrap"></div>
+    <div class="nav-row">
+      <button class="btn-back" id="btnBack" onclick="goBack()" disabled>← Retour</button>
+      <button class="btn-elim" id="btnElim" onclick="confirmChoice()">Éliminer les séjours →</button>
+    </div>
+  </div>
+  <div class="grid-zone">
+    <div class="cards-grid" id="cardsGrid"></div>
+  </div>
+</div>
+
+<div id="revealScreen">
+  <div class="reveal-wrap">
+    <div class="reveal-emoji">🎴</div>
+    <div class="reveal-title" id="revealTitle">Tes cartes sont prêtes !</div>
+    <div class="reveal-sub" id="revealSub"></div>
+    <button class="btn-reveal" onclick="showResults()">Retourner mes cartes !</button>
+  </div>
+</div>
+
+<div id="resultsScreen">
+  <div class="res-header">
+    <h2>🎉 Voici tes séjours !</h2>
+    <p id="resSubtitle"></p>
+  </div>
+  <div class="res-grid" id="resGrid"></div>
+  <button class="btn-restart" onclick="restart()">🔄 Recommencer le quiz</button>
+  <div class="footer">
+    <a href="/cdn-cgi/l/email-protection#a6c5c9c8d2c7c5d2e6c7d4c9c3d0c3c88bc4c9d4c2c3c7d3de88c0d4"><span class="__cf_email__" data-cfemail="bbd8d4d5cfdad8cffbdac9d4decdded596d9d4c9dfdedacec395ddc9">[email&#160;protected]</span></a> · 05 35 38 98 05<br>
+    <a href="https://www.aroeven-bordeaux.fr">www.aroeven-bordeaux.fr</a>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+function d(jj,mm){ return mm===7 ? jj : 31+jj; }
+
+const SEJOURS = [
+  {nom:"Du sable dans le maillot",       age:[6,10],  deb:d(27,7),fin:d(31,7), env:"mer",   cat:"proximite", passColo:false,sourd:false, dates:"27/07 au 31/07",                    lieu:"Saint-Georges-de-Didonne (17)", prix:"545 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/du-sable-dans-le-maillot-d6ce1631?session=aa91461a"},
+  {nom:"Tyrex'ion Dordogne",             age:[8,12],  deb:d(19,7),fin:d(26,7), env:"terre", cat:"proximite", passColo:true, sourd:false, dates:"19/07 au 26/07",                    lieu:"Plazac (24)",                  prix:"695 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/tyrex-ion-dordogne-3805962c?session=7d9ea3a4"},
+  {nom:"Crinière au vent",               age:[6,12],  deb:d(5,7), fin:d(19,7), env:"terre", cat:"proximite", passColo:false,sourd:false, dates:"05/07 au 19/07",                    lieu:"Margueron (33)",               prix:"710 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/criniere-au-vent-f7d938a6?session=ee094a0d"},
+  {nom:"Baguettes & Sorcellerie",        age:[8,12],  deb:d(5,7), fin:d(19,7), env:"terre", cat:"proximite", passColo:true, sourd:false, dates:"05/07 au 19/07",                    lieu:"Margueron (33)",               prix:"660 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/baguettes-and-sorcellerie-f0adec03?session=7f1f30ae"},
+  {nom:"K-pop Academy",                  age:[8,12],  deb:d(12,7),fin:d(26,7), env:"terre", cat:"proximite", passColo:true, sourd:false, dates:"12/07 au 26/07",                    lieu:"Margueron (33)",               prix:"660 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/kpop-academy-66169c81?session=797b0ce8"},
+  {nom:"Les P'tits cuistots",            age:[6,9],   deb:d(5,7), fin:d(12,7), env:"terre", cat:"proximite", passColo:false,sourd:false, dates:"05/07 au 12/07",                    lieu:"Margueron (33)",               prix:"615 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/les-p-tits-cuistos-ad3ac522?session=228812cf"},
+  {nom:"Rap, slam et podcast",           age:[11,15], deb:d(19,7),fin:d(26,7), env:"terre", cat:"proximite", passColo:true, sourd:false, dates:"19/07 au 26/07",                    lieu:"Margueron (33)",               prix:"685 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/rap-slam-et-podcast-c6ad5ed6?session=3fae733f"},
+  {nom:"Au galop !",                     age:[11,15], deb:d(19,7),fin:d(26,7), env:"terre", cat:"proximite", passColo:false,sourd:false, dates:"19/07 au 26/07",                    lieu:"Margueron (33)",               prix:"730 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/au-galop-86b88f28?session=fa7e9060"},
+  {nom:"Dans ma bulle",                  age:[8,12],  deb:d(20,7),fin:d(26,7), env:"terre", cat:"proximite", passColo:true, sourd:false, dates:"20/07 au 26/07",                    lieu:"Angoulême (16)",               prix:"555 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/dans-ma-bulle-b35371dd?session=8c3f8059"},
+  {nom:"Vacances des connectés",         age:[11,14], deb:d(11,7),fin:d(19,7), env:"terre", cat:"proximite", passColo:true, sourd:false, dates:"11/07 au 19/07",                    lieu:"Angoulême (16)",               prix:"745 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/vacances-des-connectes-8d613810?session=76d5b95b"},
+  {nom:"Surf Camp à Carcans",            age:[13,17], deb:d(4,7), fin:d(12,7), env:"mer",   cat:"proximite", passColo:false,sourd:false, dates:"04/07 au 12/07",                    lieu:"Carcans (33)",                 prix:"790 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/surf-camp-a-carcans-db41f307?session=fbc5eba5"},
+  {nom:"Kololanta",                      age:[11,15], deb:d(26,7),fin:d(9,8),  env:"terre", cat:"proximite", passColo:true, sourd:false, dates:"26/07 au 09/08",                    lieu:"Saint-Yirieix (16)",           prix:"570 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/kololanta-a642868d?session=b8813ff4"},
+  {nom:"Pilat'Aventure",                 age:[12,15], deb:d(24,7),fin:d(6,8),  env:"mer",   cat:"proximite", passColo:true, sourd:false, dates:"24/07 au 06/08",                    lieu:"La Teste-de-Buch (33)",        prix:"735 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/pilaventure-0a62e78c?session=959a5883"},
+  {nom:"Équilibre & sensations",         age:[8,13],  deb:d(10,8),fin:d(16,8), env:"mer",   cat:"france",    passColo:true, sourd:false, dates:"10/08 au 16/08",                    lieu:"Moliets (40)",                 prix:"755 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/equilibre-and-sensations-46b240cd?session=8912ff8e"},
+  {nom:"Prends la vague",                age:[11,14], deb:d(2,8), fin:d(9,8),  env:"mer",   cat:"france",    passColo:true, sourd:false, dates:"02/08 au 09/08",                    lieu:"Moliets (40)",                 prix:"850 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/prends-la-vague-c16dd1fa?session=c562a7fe"},
+  {nom:"Magic Circus",                   age:[6,12],  deb:d(6,7), fin:d(11,7), env:"mer",   cat:"france",    passColo:false,sourd:false, dates:"06/07 au 11/07",                    lieu:"Cap Breton (40)",              prix:"645 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/magic-circus-ebe9e2b7?session=f7a21f74"},
+  {nom:"Team spirit",                    age:[6,12],  deb:d(6,7), fin:d(11,7), env:"mer",   cat:"france",    passColo:true, sourd:false, dates:"06/07 au 11/07",                    lieu:"Cap Breton (40)",              prix:"565 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/team-spirit-ff8dfdab?session=f53cf77e"},
+  {nom:"Surf & Bike",                    age:[11,14], deb:d(11,7),fin:d(17,7), env:"mer",   cat:"france",    passColo:true, sourd:false, dates:"11/07 au 17/07",                    lieu:"Cap Breton (40)",              prix:"780 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/surf-and-bike-63732233?session=dbeabe1b"},
+  {nom:"Aqua Jump",                      age:[11,14], deb:d(11,7),fin:d(17,7), env:"mer",   cat:"france",    passColo:true, sourd:false, dates:"11/07 au 17/07",                    lieu:"Cap Breton (40)",              prix:"730 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/aqua-jump-dcdab636?session=992f4645"},
+  {nom:"Trappeurs de rien",              age:[6,12],  deb:d(3,8), fin:d(10,8), env:"terre", cat:"france",    passColo:true, sourd:false, dates:"03/08 au 10/08",                    lieu:"Luchon (31)",                  prix:"860 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/trappeurs-de-rien-bf7320f7?session=9f432b2e"},
+  {nom:"Une montagne de choses à faire", age:[9,13],  deb:d(20,7),fin:d(10,8), env:"terre", cat:"france",    passColo:true, sourd:true,  dates:"20/07 au 27/07 ou 03/08 au 10/08",  lieu:"Luchon (31)",                  prix:"565 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/une-montagne-de-choses-a-faire-79d3def7?session=49b19aff"},
+  {nom:"Change d'Altitude",              age:[11,14], deb:d(20,7),fin:d(3,8),  env:"terre", cat:"france",    passColo:true, sourd:true,  dates:"20/07 au 27/07 ou 27/07 au 03/08",  lieu:"Luchon (31)",                  prix:"565 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/change-d-altitude-1a105dab?session=c87215f3"},
+  {nom:"À couper le souffle",            age:[13,17], deb:d(27,7),fin:d(3,8),  env:"terre", cat:"france",    passColo:false,sourd:true,  dates:"27/07 au 03/08",                    lieu:"Luchon (31)",                  prix:"905 €",     lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/a-couper-le-souffle-dd304160?session=55a104cd"},
+  {nom:"Ça se Corse",                    age:[14,17], deb:d(15,7),fin:d(28,7), env:"mer",   cat:"france",    passColo:false,sourd:false, dates:"15/07 au 28/07",                    lieu:"Corse (2A/2B)",                prix:"1 495 €",   lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/Ca-se-corse-a0e29b09?session=79b22d74"},
+  {nom:"C'est Palma faute ! (12j)",      age:[12,17], deb:d(23,7),fin:d(13,8), env:"mer",   cat:"etranger",  passColo:true, sourd:false, dates:"23/07 au 03/08 ou 02/08 au 13/08",  lieu:"Majorque, Espagne",            prix:"1 205 €",   lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/c-est-palma-faute-75872e91?session=09117c4b"},
+  {nom:"C'est Palma faute ! (14j)",      age:[14,17], deb:d(11,7),fin:d(24,7), env:"mer",   cat:"etranger",  passColo:true, sourd:false, dates:"11/07 au 24/07",                    lieu:"Majorque, Espagne",            prix:"1 315 €",   lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/c-est-palma-faute-1e0892cb?session=0277f8e4"},
+  {nom:"Pasta la vista",                 age:[14,17], deb:d(14,7),fin:d(25,7), env:"terre", cat:"etranger",  passColo:false,sourd:false, dates:"14/07 au 25/07",                    lieu:"Italie (Rome, Florence, Milan…)",prix:"1 595 €",  lien:"https://www.aroeven-bordeaux.fr/vacances-loisirs/sejours/pasta-la-vista-34b5f8b5?session=7c0d07bf"},
+];
+
+const NB_SEJOURS = SEJOURS.length;
+const CAT_CONFIG = {
+  proximite: { label:"📍 Séjour de proximité" },
+  france:    { label:"🇫🇷 Séjour en France"    },
+  etranger:  { label:"✈️ Séjour à l'étranger"  },
+};
+const AGE_RANGES = [[6,9],[10,12],[13,15],[16,17]];
+const AGE_LABELS = ["6-9 ans","10-12 ans","13-15 ans","16-17 ans"];
+const DATE_FILTERS = [
+  (s) => s.deb <= d(12,7),
+  (s) => s.deb <= d(31,7) && s.fin >= d(11,7),
+  (s) => s.fin >= d(1,8),
+  null,
+];
+const ENV_VALUES = ["mer","terre",null];
+const QUESTIONS = [
+  { q:"Tu as quel âge ?", opts:[
+    {label:"6 à 9 ans",   icon:"🧒"},
+    {label:"10 à 12 ans", icon:"👦"},
+    {label:"13 à 15 ans", icon:"🧑"},
+    {label:"16 à 17 ans", icon:"👩"},
+  ]},
+  { q:"Tu pars quand cet été ?", opts:[
+    {label:"Début juillet (avant le 12/07)",  icon:"📅"},
+    {label:"Fin juillet (du 11/07 au 31/07)", icon:"☀️"},
+    {label:"En août",                          icon:"🌅"},
+    {label:"Pas encore décidé",               icon:"🤷"},
+  ]},
+  { q:"Tu es plutôt… ?", opts:[
+    {label:"Team Mer, vagues et activités dans l'eau",  icon:"🏖️"},
+    {label:"Team Nature, forêt et aventures sur terre", icon:"🌿"},
+    {label:"Team les 2 !",                              icon:"🤩"},
+  ]},
+];
+const NB_Q = 3;
+let step = 0;
+let answers = [null, null, null];
+let alive = Array(NB_SEJOURS).fill(true);
+let pendingFi = null;
+let busy = false;
+
+window.onload = () => { buildGrid(); renderQ(); };
+
+function buildGrid(){
+  const g = document.getElementById('cardsGrid');
+  g.innerHTML = '';
+  for(let i=0;i<NB_SEJOURS;i++){
+    const c = document.createElement('div');
+    c.className = 'card-mystery';
+    c.id = 'card-'+i;
+    g.appendChild(c);
+  }
+  updateCounter();
+}
+
+function renderQ(){
+  const de = document.getElementById('progressDots');
+  de.innerHTML = '';
+  for(let i=0;i<NB_Q;i++){
+    const dot = document.createElement('div');
+    dot.className = 'dot'+(i<step?' done':i===step?' active':'');
+    de.appendChild(dot);
+  }
+  document.getElementById('qLabel').textContent = `Question ${step+1} / ${NB_Q}`;
+  document.getElementById('qText').textContent  = QUESTIONS[step].q;
+  const oe = document.getElementById('optsWrap');
+  oe.innerHTML = '';
+  const curFi = answers[step];
+  pendingFi = curFi;
+  QUESTIONS[step].opts.forEach((o, fi) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-chip'+(curFi===fi?' selected':'');
+    btn.innerHTML = `<span>${o.icon}</span> ${o.label}`;
+    btn.onclick = () => { if(!busy) pickOpt(fi); };
+    oe.appendChild(btn);
+  });
+  document.getElementById('btnBack').disabled = (step === 0);
+  const elBtn = document.getElementById('btnElim');
+  elBtn.textContent = step === NB_Q-1 ? 'Voir mes résultats →' : 'Éliminer les séjours →';
+  elBtn.classList.toggle('ready', pendingFi !== null);
+  updateCounter();
+}
+
+function pickOpt(fi){
+  pendingFi = fi;
+  document.querySelectorAll('.opt-chip').forEach((b,j) => b.classList.toggle('selected', j===fi));
+  document.getElementById('btnElim').classList.add('ready');
+}
+
+function updateCounter(){
+  const n = alive.filter(Boolean).length;
+  document.getElementById('counterText').textContent =
+    n+' séjour'+(n>1?'s':'')+' restant'+(n>1?'s':'');
+}
+
+function passes(i){
+  const s = SEJOURS[i];
+  const [a0, a1, a2] = answers;
+  if(a0 !== null){ const [lo,hi] = AGE_RANGES[a0]; if(s.age[1]<lo || s.age[0]>hi) return false; }
+  if(a1 !== null){ const fn = DATE_FILTERS[a1]; if(fn && !fn(s)) return false; }
+  if(a2 !== null && a2 !== 2){ if(s.env !== ENV_VALUES[a2]) return false; }
+  return true;
+}
+
+// Vérifie si tous les séjours encore vivants ont le même env (mer ou terre)
+// → dans ce cas Q3 n'apporterait rien, on la saute
+function shouldSkipQ3(){
+  const living = SEJOURS.filter((_,i) => alive[i]);
+  if(living.length === 0) return false;
+  const envs = new Set(living.map(s => s.env));
+  // Si un seul env parmi les survivants → Q3 inutile
+  return envs.size === 1;
+}
+
+function confirmChoice(){
+  if(pendingFi===null || busy) return;
+  busy = true;
+  answers[step] = pendingFi;
+  const toElim = [];
+  for(let i=0;i<NB_SEJOURS;i++){ if(!alive[i]) continue; if(!passes(i)) toElim.push(i); }
+  let delay = 0;
+  toElim.forEach(idx => {
+    const el = document.getElementById('card-'+idx);
+    setTimeout(()=>{
+      el.classList.add('eliminating');
+      setTimeout(()=>{ el.classList.add('gone'); alive[idx]=false; updateCounter(); }, 450);
+    }, delay);
+    delay += 35;
+  });
+  setTimeout(()=>{
+    busy = false;
+    if(step < NB_Q-1){
+      // On est sur Q1 ou Q2 → passe à la suivante, sauf si c'est Q2 et Q3 inutile
+      const nextStep = step + 1;
+      if(nextStep === NB_Q-1 && shouldSkipQ3()){
+        // Q3 sautée : on met answers[2] à null (= "les 2") et on va à l'écran révélation
+        answers[2] = null;
+        step = NB_Q; // marque Q3 comme sautée (hors range)
+        pendingFi = null;
+        goToReveal();
+      } else {
+        step = nextStep;
+        pendingFi = null;
+        renderQ();
+      }
+    } else {
+      goToReveal();
+    }
+  }, delay + 520);
+}
+
+function goBack(){
+  if(step===0 || busy) return;
+  // Si Q3 a été sautée (step === NB_Q), on revient à Q2
+  const prevStep = step > NB_Q-1 ? NB_Q-2 : step-1;
+  step = prevStep;
+  for(let q=step;q<NB_Q;q++) answers[q]=null;
+  for(let i=0;i<NB_SEJOURS;i++){
+    const shouldBeAlive = passes(i);
+    if(!alive[i] && shouldBeAlive){ document.getElementById('card-'+i).classList.remove('eliminating','gone'); }
+    alive[i] = shouldBeAlive;
+  }
+  pendingFi = null;
+  renderQ();
+}
+
+function goToReveal(){
+  document.getElementById('quizScreen').style.display = 'none';
+  document.getElementById('revealScreen').style.display = 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+  const n = alive.filter(Boolean).length;
+  const al = answers[0]!==null ? AGE_LABELS[answers[0]] : '';
+  document.getElementById('revealTitle').textContent = n>0 ? `${n} séjour${n>1?'s':''} t'attendent !` : 'Aucun séjour trouvé…';
+  document.getElementById('revealSub').textContent = n>0
+    ? `${n} séjour${n>1?'s sont':' est'} parfaitement adapté${n>1?'s':''} à tes préférences${al?' pour '+al:''}. Prêt·e à les découvrir ?`
+    : `Aucun séjour ne correspond exactement. Tu peux revenir en arrière et modifier tes réponses !`;
+}
+
+function showResults(){
+  document.getElementById('revealScreen').style.display = 'none';
+  document.getElementById('resultsScreen').style.display = 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+  const al = answers[0]!==null ? AGE_LABELS[answers[0]] : '';
+  document.getElementById('resSubtitle').textContent = al ? `Résultats pour ${al}` : 'Tes séjours recommandés';
+  const grid = document.getElementById('resGrid');
+  grid.innerHTML = '';
+  const ordered = ['proximite','france','etranger']
+    .flatMap(cat => SEJOURS.map((s,i)=>({s,i})).filter(({s,i}) => alive[i] && s.cat===cat));
+  if(ordered.length === 0){
+    grid.innerHTML = `<div class="no-result"><h3>😕 Aucun séjour trouvé</h3><p>Aucun séjour ne correspond exactement à ta combinaison.<br>Essaie de modifier la période ou l'environnement,<br>ou contacte-nous pour qu'on t'aide à trouver le séjour idéal !</p></div>`;
+  } else {
+    ordered.forEach(({s}, pos) => {
+      const cfg = CAT_CONFIG[s.cat];
+      const card = document.createElement('div');
+      card.className = `res-card ${s.cat}`;
+      card.style.animationDelay = (pos*.08)+'s';
+      const pills = [
+        `<span class="rc-pill">👥 ${s.age[0]}-${s.age[1]} ans</span>`,
+        `<span class="rc-pill">📍 ${s.lieu}</span>`,
+        `<span class="rc-pill">📅 ${s.dates}</span>`,
+        `<span class="rc-pill prix">💶 ${s.prix}</span>`,
+        s.passColo ? `<span class="rc-pill pass">🎟️ Pass Colo</span>` : '',
+      ].join('');
+      card.innerHTML = `
+        <div class="res-card-head">
+          <div class="rc-name">${s.nom}</div>
+          ${s.sourd ? '<div class="rc-sourd">🤟 Accessible sourds/malentendants</div>' : ''}
+        </div>
+        <div class="res-card-body">
+          <div class="rc-pills">${pills}</div>
+          <a class="btn-more" href="${s.lien}" target="_blank" rel="noopener">En savoir plus →</a>
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
+  confetti();
+}
+
+function confetti(){
+  const cols=['#005680','#9fc646','#F39200','#00AEB2','#FDC300','#E60060','#00835C'];
+  for(let i=0;i<70;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div'); el.className='cf';
+      const sz=7+Math.random()*9;
+      el.style.cssText=`left:${Math.random()*100}vw;top:-10px;width:${sz}px;height:${sz}px;background:${cols[Math.floor(Math.random()*cols.length)]};border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.6+Math.random()*2}s;`;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),3800);
+    },i*30);
+  }
+}
+
+function restart(){
+  step=0; answers=[null,null,null];
+  alive=Array(NB_SEJOURS).fill(true); pendingFi=null; busy=false;
+  document.getElementById('resul
