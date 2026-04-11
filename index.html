@@ -144,10 +144,8 @@ body { font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif; back
 <body>
 
 <div class="top-bar">
-  <svg width="120" height="40" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
-  <text x="2" y="28" font-family="Trebuchet MS, Arial, sans-serif" font-size="26" font-weight="900" fill="#005680">Aro</text>
-  <text x="44" y="28" font-family="Trebuchet MS, Arial, sans-serif" font-size="26" font-weight="900" fill="#9fc646">éven</text>
-</svg>
+  <div class="top-bar">
+  <img src="https://www.aroeven.fr/static/medias/3254e13a/684ff073595ed697027609.png" alt="Logo Aroéven" style="height: 40px; width: auto;">
   <div class="top-bar-title">Trouve ton séjour idéal <span>Été 2026</span></div>
 </div>
 
@@ -431,7 +429,7 @@ function showResults(){
       card.innerHTML = `
         <div class="res-card-head">
           <div class="rc-name">${s.nom}</div>
-          ${s.sourd ? '<div class="rc-sourd">🤟 Accessible sourds/malentendants</div>' : ''}
+         ${s.sourd ? '<div class="rc-sourd" title="Accessible sourds/malentendants"><img src="https://dealersdescience.com/wp-content/uploads/2013/01/logo-LSF.jpg" alt="Logo LSF" style="height: 24px; border-radius: 4px; margin-top: 4px;"></div>' : ''}
         </div>
         <div class="res-card-body">
           <div class="rc-pills">${pills}</div>
