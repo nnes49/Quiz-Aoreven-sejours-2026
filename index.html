@@ -231,10 +231,9 @@ const CAT_CONFIG = {
 const AGE_RANGES = [[6,9],[10,12],[13,15],[16,17]];
 const AGE_LABELS = ["6-9 ans","10-12 ans","13-15 ans","16-17 ans"];
 const DATE_FILTERS = [
-  (s) => s.deb <= d(12,7),
-  (s) => s.deb <= d(31,7) && s.fin >= d(11,7),
-  (s) => s.fin >= d(1,8),
-  null,
+  (s) => s.deb <= d(31,7), // Commence en juillet
+  (s) => s.fin >= d(1,8),  // Finit en août
+  null,                    // Pas encore décidé (affiche tout)
 ];
 const ENV_VALUES = ["mer","terre",null];
 const QUESTIONS = [
@@ -244,15 +243,14 @@ const QUESTIONS = [
     {label:"13 à 15 ans", icon:"🧑"},
     {label:"16 à 17 ans", icon:"👩"},
   ]},
-  { q:"Tu pars quand cet été ?", opts:[
-    {label:"Début juillet (avant le 12/07)",  icon:"📅"},
-    {label:"Fin juillet (du 11/07 au 31/07)", icon:"☀️"},
-    {label:"En août",                          icon:"🌅"},
-    {label:"Pas encore décidé",               icon:"🤷"},
+{ q:"Tu pars quand cet été ?", opts:[
+    {label:"En juillet", icon:"☀️"},
+    {label:"En août",    icon:"🌅"},
+    {label:"Pas encore décidé", icon:"🤷"},
   ]},
   { q:"Tu es plutôt… ?", opts:[
     {label:"Team Mer, vagues et activités dans l'eau",  icon:"🏖️"},
-    {label:"Team Nature, forêt et aventures sur terre", icon:"🌿"},
+    {label:"Team aventures sur terre (nature, ville, montagne)", icon:"🌿"},
     {label:"Team les 2 !",                              icon:"🤩"},
   ]},
 ];
