@@ -98,7 +98,7 @@ body { font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif; back
   65%  { transform:perspective(600px) rotateY(-5deg) scale(1.02); }
   100% { opacity:1; transform:perspective(600px) rotateY(0) scale(1); }
 }
-.res-card-head { border-bottom: 3px solid #E60060; }
+.res-card-head { border-bottom: 3px solid #f2f6f0; }
 .res-card.proximite .rc-badge { background:var(--vert-intense); color:white; }
 .res-card.france    .rc-badge { background:var(--orange); color:white; }
 .res-card.etranger  .rc-badge { background:var(--ciel); color:white; }
@@ -115,16 +115,14 @@ body { font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif; back
 
 .btn-more {
   display:inline-flex; align-items:center; gap:6px;
-  padding:9px 18px; border-radius:100px;
-  border:2px solid var(--bleu); background:white;
-  color:var(--bleu); font-family:'Segoe UI','Arial Rounded MT Bold',Arial,sans-serif;
-  font-size:12px; font-weight:800;
+  padding:10px 20px; border-radius:100px;
+  border:none; background:#f2f6f0;
+  color:var(--bleu); font-family:'Outfit', sans-serif;
+  font-size:13px; font-weight:700;
   cursor:pointer; text-decoration:none;
   transition:all .15s;
 }
-.btn-more:hover { background:var(--bleu); color:white; }
-.res-card.etranger .btn-more { border-color:var(--ciel); color:var(--ciel); }
-.res-card.etranger .btn-more:hover { background:var(--ciel); color:white; }
+.btn-more:hover { background:#e4ede4; color:var(--bleu); transform:translateY(-1px); }
 
 .no-result { text-align:center; padding:40px 20px; background:white; border-radius:16px; grid-column:1/-1; }
 .no-result h3 { font-family:'Trebuchet MS','Arial Rounded MT Bold',Arial,sans-serif;font-weight:800; color:var(--bleu); font-size:20px; margin-bottom:8px; }
